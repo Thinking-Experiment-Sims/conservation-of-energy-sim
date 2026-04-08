@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conservation of Mechanical Energy | The Thinking Experiment</title>
+    <meta name="description" content="Interactive free-fall simulation. Drop an object through photogates, measure velocity at different heights, and verify that mechanical energy is conserved.">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://vladimirlopez.github.io/the-thinking-experiment/assets/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="https://vladimirlopez.github.io/the-thinking-experiment/assets/favicon-16.png" />
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        window.MathJax = {
+            startup: { pageReady: () => MathJax.startup.defaultPageReady() }
+        };
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body data-theme="light">
+    <div class="bg-grid"></div>
+    <div id="sr-announcements" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <div class="shell">
+        <!-- ===== HERO ===== -->
+        <div class="hero">
+            <div class="hero-top">
+                <div>
+                    <p class="kicker">The Thinking Experiment</p>
+                    <h1>Conservation of Mechanical Energy</h1>
+                    <p class="subtitle">Drop an object through photogates, track the transformation between potential and kinetic energy, and verify that mechanical energy is conserved.</p>
+                </div>
+            </div>
+            <button class="display-toggle ghost" id="themeBtn" onclick="const isLight = document.body.dataset.theme === 'light'; document.body.dataset.theme = isLight ? '' : 'light'; this.textContent = isLight ? 'Light mode' : 'Dark mode';">Dark mode</button>
+        </div>
+
+        <!-- ===== MODE TABS ===== -->
+        <div class="mode-tabs">
+            <button class="mode-tab active" data-mode="lab" id="labModeBtn">🔬 Lab Mode</button>
+            <button class="mode-tab ghost" data-mode="teacher" id="teacherModeBtn">🎓 Teacher Demo</button>
+        </div>
+
+        <!-- ==================== LAB MODE ==================== -->
+        <div class="mode-content active" id="lab-mode">
+            <!-- Inquiry Steps -->
+            <div class="panel full">
+                <h2>Learning Objective</h2>
+                <p class="subtitle">Track PE, KE, and ME at six heights during free fall. Verify that their sum stays constant — energy is transformed, never lost.</p>
+                <div class="inquiry-grid">
+                    <div class="inquiry-card">
+                        <h3>Step 1 · Set Up</h3>
+                        <p>Set the mass of the falling object. The top photogate is fixed at the release height. Move the <strong>lower photogate</strong> to each measurement height.</p>
+                    </div>
+                    <div class="inquiry-card">
+                        <h3>Step 2 · Drop & Record</h3>
+                        <p>Press <strong>Drop Ball</strong>. The timer starts when the ball passes the top photogate and stops at the lower one. Click <strong>Record Data Point</strong> to save the trial.</p>
+                    </div>
+                    <div class="inquiry-card">
+                        <h3>Step 3 · Analyze</h3>
+                        <p>After recording all 6 points, examine the energy bar chart and line graph. Does ME stay constant? What pattern do PE and KE follow?</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Layout: Canvas + Controls -->
+            <div class="app-layout">
+                <!-- Canvas Panel -->
+                <div class="panel wide">
+                    <div class="sim-toolbar">
+                        <h2>Free-Fall Setup</h2>
+                        <p class="hint" id="labHint">Move the lower photogate and drop the ball to build your data table.</p>
+                    </div>
+                    <canvas id="labCanvas" class="sim-canvas" width="700" height="560" role="img" aria-label="Vertical free-fall apparatus with two photogates and a falling ball"></canvas>
+
+                    <!-- Live Readout -->
+                    <div class="metric-grid readout-grid">
+                        <div class="metric-card">
+                            <div class="metric-line"><span class="metric-label">Height</span><span id="labHeight">1.000 m</span></div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-line"><span class="metric-label">Fall Time</span><span id="labTime">— s</span></div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-line"><span class="metric-label">Velocity</span><span id="labVelocity">— m/s</span></div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-line"><span class="metric-label">Trials</span><span id="labTrials">0 / 6</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controls Panel -->
+                <div class="panel narrow">
+                    <h2>Controls</h2>
+
+                    <!-- Mass Control -->
+                    <div class="mass-controls-box">
+                        <label>
+                            Object Mass
+                            <div class="range-row">
+                                <input type="range" id="massSlider" min="0.100" max="1.000" step="0.010" value="0.250">
+                                <output id="massDisplay">0.250 kg</output>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Top photogate height -->
+                    <div class="mass-controls-box" style="margin-top:0.5rem;">
+                        <label>
+                            Release Height (Top Photogate)
+                            <div class="range-row">
+                                <input type="range" id="topGateSlider" min="0.500" max="1.000" step="0.010" value="1.000">
+                                <output id="topGateDisplay">1.000 m</output>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Bottom photogate height -->
+                    <div class="mass-controls-box" style="margin-top:0.5rem;">
+                        <label>
+                            Lower Photogate Height
+                            <div class="range-row">
+                                <input type="range" id="bottomGateSlider" min="0.000" max="0.950" step="0.010" value="0.800">
+                                <output id="bottomGateDisplay">0.800 m</output>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Lab Buttons -->
+                    <div class="button-row">
+                        <button id="dropBtn">🔽 Drop Ball</button>
+                    </div>
+                    <div class="button-row">
+                        <button id="recordBtn" disabled>📝 Record Data Point</button>
+                    </div>
+                    <div class="button-row">
+                        <button class="ghost" id="resetLabBtn">🔄 Reset Experiment</button>
+                    </div>
+
+                    <!-- Data Table -->
+                    <h3 class="section-title">Data Table</h3>
+                    <div class="data-table-wrap">
+                        <table class="data-table" id="dataTable">
+                            <thead>
+                                <tr>
+                                    <th>Point</th>
+                                    <th>h (m)</th>
+                                    <th>t (s)</th>
+                                    <th>v (m/s)</th>
+                                    <th>PE (J)</th>
+                                    <th>KE (J)</th>
+                                    <th>ME (J)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr id="trialA"><td>A</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+                                <tr id="trialB"><td>B</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+                                <tr id="trialC"><td>C</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+                                <tr id="trialD"><td>D</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+                                <tr id="trialE"><td>E</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+                                <tr id="trialF"><td>F</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Energy Readout -->
+                    <h3 class="section-title">Energy at Lower Gate</h3>
+                    <div class="energy-readout-grid">
+                        <div class="energy-card pe-card">
+                            <span class="energy-label">PE</span>
+                            <span class="energy-value" id="livePE">— J</span>
+                        </div>
+                        <div class="energy-card ke-card">
+                            <span class="energy-label">KE</span>
+                            <span class="energy-value" id="liveKE">— J</span>
+                        </div>
+                        <div class="energy-card me-card">
+                            <span class="energy-label">ME</span>
+                            <span class="energy-value" id="liveME">— J</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Graphs Section -->
+            <div class="app-layout">
+                <div class="panel" style="grid-column: span 6;">
+                    <h3 class="section-title" style="margin-top:0;">Energy at Each Point</h3>
+                    <canvas id="energyBarChart" class="sim-canvas graph-canvas" width="580" height="320"></canvas>
+                    <p class="hint" style="text-align:center;">Grouped bar chart — PE (blue), KE (orange), ME (green) at each recorded point.</p>
+                </div>
+                <div class="panel" style="grid-column: span 6;">
+                    <h3 class="section-title" style="margin-top:0;">Energy vs. Height</h3>
+                    <canvas id="energyLineGraph" class="sim-canvas graph-canvas" width="580" height="320"></canvas>
+                    <p class="hint" style="text-align:center;">As height decreases, PE converts to KE — but ME stays constant.</p>
+                </div>
+            </div>
+
+            <!-- Info Tabs -->
+            <div class="panel full">
+                <div class="tab-nav">
+                    <button class="tab-btn active" data-tab="lab-exploration">Guided Exploration</button>
+                    <button class="tab-btn" data-tab="lab-theory">Physics Theory</button>
+                </div>
+
+                <div class="tab-content active" id="lab-exploration-tab">
+                    <div class="inquiry-grid" style="margin-top:0.6rem;">
+                        <div class="inquiry-card">
+                            <h3>🔮 Predict First</h3>
+                            <p>Before dropping the ball, predict: at half the original height, will the ball have half the original PE? Will it have half the maximum KE? Think carefully!</p>
+                        </div>
+                        <div class="inquiry-card">
+                            <h3>📊 Read the Bar Chart</h3>
+                            <p>Look at the green bars (ME). Are they all roughly the same height? If PE drops by some amount between two points, how much does KE increase?</p>
+                        </div>
+                        <div class="inquiry-card">
+                            <h3>🧪 The Transfer Pattern</h3>
+                            <p>On the line graph, find the height where PE = KE. At that height, each form of energy equals <strong>exactly half</strong> of the total. Why?</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="lab-theory-tab">
+                    <div class="theory-columns">
+                        <div>
+                            <h3>The Model</h3>
+                            <p>Gravity does work on the falling object. Potential energy converts to kinetic energy:</p>
+                            <div class="equation">\(PE = mgh \qquad KE = \tfrac{1}{2}mv^2\)</div>
+                            <p>Mechanical energy is their sum:</p>
+                            <div class="equation">\(ME = PE + KE = \text{constant}\)</div>
+                            <p>For free fall from rest:</p>
+                            <div class="equation">\(v_f = g \cdot t \qquad (v_0 = 0)\)</div>
+                        </div>
+                        <div>
+                            <h3>Key Insights</h3>
+                            <ul>
+                                <li><strong>Reference point:</strong> Height h is measured from the lowest point (h = 0 at Point F).</li>
+                                <li><strong>At the top:</strong> All energy is PE, KE = 0.</li>
+                                <li><strong>At the bottom:</strong> All energy is KE, PE = 0.</li>
+                                <li><strong>Conservation:</strong> \(\Delta PE + \Delta KE = 0\) — any PE lost becomes KE gained.</li>
+                            </ul>
+                            <h3>Why Does It Work?</h3>
+                            <p>Gravity is a <strong>conservative force</strong> — the work it does depends only on start and end positions, not the path. No energy is "used up"; it just changes form.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TEACHER DEMO MODE ==================== -->
+        <div class="mode-content" id="teacher-mode">
+            <div class="panel full">
+                <h2>Teacher Demonstration</h2>
+                <p class="subtitle">Auto-run the complete experiment with step-by-step annotations. Use this to walk through the lab with your class or demonstrate the conservation principle.</p>
+            </div>
+
+            <div class="app-layout">
+                <div class="panel wide">
+                    <div class="sim-toolbar">
+                        <h2>Demonstration View</h2>
+                        <p class="hint" id="teacherHint">Press "Run Demo" to start the automated walkthrough.</p>
+                    </div>
+                    <canvas id="teacherCanvas" class="sim-canvas" width="700" height="560" role="img" aria-label="Teacher demonstration of free-fall energy conservation"></canvas>
+
+                    <!-- Teacher Readout -->
+                    <div class="metric-grid readout-grid">
+                        <div class="metric-card">
+                            <div class="metric-line"><span class="metric-label">Current Point</span><span id="teacherPoint">—</span></div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-line"><span class="metric-label">Height</span><span id="teacherHeight">— m</span></div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-line"><span class="metric-label">Velocity</span><span id="teacherVelocity">— m/s</span></div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-line"><span class="metric-label">ME</span><span id="teacherME">— J</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Teacher Graphs -->
+                    <div class="graph-pair" style="margin-top:0.8rem;">
+                        <div>
+                            <canvas id="teacherBarChart" class="sim-canvas graph-canvas-sm" width="500" height="240"></canvas>
+                            <p class="hint" style="text-align:center;">Energy at Each Point</p>
+                        </div>
+                        <div>
+                            <canvas id="teacherLineGraph" class="sim-canvas graph-canvas-sm" width="500" height="240"></canvas>
+                            <p class="hint" style="text-align:center;">Energy vs. Height</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel narrow">
+                    <h2>Demo Controls</h2>
+
+                    <div class="mass-controls-box">
+                        <label>
+                            Object Mass
+                            <div class="range-row">
+                                <input type="range" id="teacherMassSlider" min="0.100" max="1.000" step="0.010" value="0.250">
+                                <output id="teacherMassDisplay">0.250 kg</output>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="mass-controls-box" style="margin-top:0.5rem;">
+                        <label>
+                            Drop Height
+                            <div class="range-row">
+                                <input type="range" id="teacherHeightSlider" min="0.500" max="1.000" step="0.010" value="1.000">
+                                <output id="teacherHeightDisplay">1.000 m</output>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="mass-controls-box" style="margin-top:0.5rem;">
+                        <label>
+                            Demo Speed
+                            <div class="range-row">
+                                <input type="range" id="demoSpeedSlider" min="0.5" max="3" step="0.5" value="1">
+                                <output id="demoSpeedDisplay">1.0×</output>
+                            </div>
+                        </label>
+                    </div>
+
+                    <label class="compact-toggle" style="margin-top:0.5rem;">
+                        <input type="checkbox" id="airResistToggle">
+                        <span>Add Air Resistance (energy loss)</span>
+                    </label>
+
+                    <div class="button-row">
+                        <button id="runDemoBtn">▶ Run Demo</button>
+                    </div>
+                    <div class="button-row">
+                        <button class="ghost" id="pauseDemoBtn" disabled>⏸ Pause</button>
+                        <button class="ghost" id="resetDemoBtn">↺ Reset</button>
+                    </div>
+
+                    <!-- Teacher Data Table -->
+                    <h3 class="section-title">Demo Data</h3>
+                    <div class="data-table-wrap">
+                        <table class="data-table" id="teacherDataTable">
+                            <thead>
+                                <tr>
+                                    <th>Pt</th>
+                                    <th>h (m)</th>
+                                    <th>v (m/s)</th>
+                                    <th>PE</th>
+                                    <th>KE</th>
+                                    <th>ME</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr id="tTrialA"><td>A</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+                                <tr id="tTrialB"><td>B</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+                                <tr id="tTrialC"><td>C</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+                                <tr id="tTrialD"><td>D</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+                                <tr id="tTrialE"><td>E</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+                                <tr id="tTrialF"><td>F</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Annotation box -->
+                    <div class="teacher-annotation" id="teacherAnnotation">
+                        <p id="annotationText">Press <strong>Run Demo</strong> to start the automated walkthrough of all 6 measurement points.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Teacher Theory -->
+            <div class="panel full">
+                <div class="tab-nav">
+                    <button class="tab-btn active" data-tab="teacher-tips">Teaching Tips</button>
+                    <button class="tab-btn" data-tab="teacher-theory">Full Theory</button>
+                </div>
+                <div class="tab-content active" id="teacher-tips-tab">
+                    <div class="inquiry-grid" style="margin-top:0.6rem;">
+                        <div class="inquiry-card">
+                            <h3>💡 Key Misconception</h3>
+                            <p>Students often think energy is "used up" during a fall. Emphasize that PE <strong>transforms into</strong> KE — the total doesn't change. Point at the green ME bars.</p>
+                        </div>
+                        <div class="inquiry-card">
+                            <h3>📐 The Math Connection</h3>
+                            <p>Show that setting \(mgh = \frac{1}{2}mv^2\) and solving for v gives \(v = \sqrt{2gh}\) — mass cancels! All objects fall the same way regardless of mass.</p>
+                        </div>
+                        <div class="inquiry-card">
+                            <h3>🌊 Air Resistance Toggle</h3>
+                            <p>Turn on air resistance to show ME decreasing. Ask: "Where does the energy go?" (thermal energy, sound). This bridges to non-conservative forces.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content" id="teacher-theory-tab">
+                    <div class="theory-columns">
+                        <div>
+                            <h3>Conservation of Energy</h3>
+                            <div class="equation">\(ME = PE + KE = mgh + \tfrac{1}{2}mv^2\)</div>
+                            <p>For free-fall from rest at height \(h_0\):</p>
+                            <div class="equation">\(mgh_0 = mgh + \tfrac{1}{2}mv^2\)</div>
+                            <p>Solving for speed at any height:</p>
+                            <div class="equation">\(v = \sqrt{2g(h_0 - h)}\)</div>
+                        </div>
+                        <div>
+                            <h3>Lab Verification</h3>
+                            <p>Using photogates, we measure <strong>time</strong> for free fall. Since v₀ = 0:</p>
+                            <div class="equation">\(v_f = g \cdot t\)</div>
+                            <p>Combined with the height of the lower photogate, we can calculate PE and KE independently and verify:</p>
+                            <div class="equation">\(\Delta PE + \Delta KE = 0\)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>© 2026 Vladimir Lopez · The Thinking Experiment · Interactive Physics Simulations</p>
+        </footer>
+    </div>
+
+    <script src="simulation.js"></script>
+</body>
+</html>
