@@ -71,15 +71,12 @@
                     <canvas id="labCanvas" class="sim-canvas" width="700" height="560" role="img" aria-label="Vertical free-fall apparatus with two photogates and a falling ball"></canvas>
 
                     <!-- Live Readout -->
-                    <div class="metric-grid readout-grid">
+                    <div class="metric-grid readout-grid" style="grid-template-columns: repeat(3, 1fr);">
                         <div class="metric-card">
                             <div class="metric-line"><span class="metric-label">Height</span><span id="labHeight">1.000 m</span></div>
                         </div>
                         <div class="metric-card">
                             <div class="metric-line"><span class="metric-label">Fall Time</span><span id="labTime">— s</span></div>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-line"><span class="metric-label">Velocity</span><span id="labVelocity">— m/s</span></div>
                         </div>
                         <div class="metric-card">
                             <div class="metric-line"><span class="metric-label">Trials</span><span id="labTrials">0 / 6</span></div>
@@ -144,53 +141,19 @@
                                     <th>Point</th>
                                     <th>h (m)</th>
                                     <th>t (s)</th>
-                                    <th>v (m/s)</th>
-                                    <th>PE (J)</th>
-                                    <th>KE (J)</th>
-                                    <th>ME (J)</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr id="trialA"><td>A</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
-                                <tr id="trialB"><td>B</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
-                                <tr id="trialC"><td>C</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
-                                <tr id="trialD"><td>D</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
-                                <tr id="trialE"><td>E</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
-                                <tr id="trialF"><td>F</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+                                <tr id="trialA"><td>A</td><td>—</td><td>—</td></tr>
+                                <tr id="trialB"><td>B</td><td>—</td><td>—</td></tr>
+                                <tr id="trialC"><td>C</td><td>—</td><td>—</td></tr>
+                                <tr id="trialD"><td>D</td><td>—</td><td>—</td></tr>
+                                <tr id="trialE"><td>E</td><td>—</td><td>—</td></tr>
+                                <tr id="trialF"><td>F</td><td>—</td><td>—</td></tr>
                             </tbody>
                         </table>
                     </div>
-
-                    <!-- Energy Readout -->
-                    <h3 class="section-title">Energy at Lower Gate</h3>
-                    <div class="energy-readout-grid">
-                        <div class="energy-card pe-card">
-                            <span class="energy-label">PE</span>
-                            <span class="energy-value" id="livePE">— J</span>
-                        </div>
-                        <div class="energy-card ke-card">
-                            <span class="energy-label">KE</span>
-                            <span class="energy-value" id="liveKE">— J</span>
-                        </div>
-                        <div class="energy-card me-card">
-                            <span class="energy-label">ME</span>
-                            <span class="energy-value" id="liveME">— J</span>
-                        </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- Graphs Section -->
-            <div class="app-layout">
-                <div class="panel" style="grid-column: span 6;">
-                    <h3 class="section-title" style="margin-top:0;">Energy at Each Point</h3>
-                    <canvas id="energyBarChart" class="sim-canvas graph-canvas" width="580" height="320"></canvas>
-                    <p class="hint" style="text-align:center;">Grouped bar chart — PE (blue), KE (orange), ME (green) at each recorded point.</p>
-                </div>
-                <div class="panel" style="grid-column: span 6;">
-                    <h3 class="section-title" style="margin-top:0;">Energy vs. Height</h3>
-                    <canvas id="energyLineGraph" class="sim-canvas graph-canvas" width="580" height="320"></canvas>
-                    <p class="hint" style="text-align:center;">As height decreases, PE converts to KE — but ME stays constant.</p>
                 </div>
             </div>
 

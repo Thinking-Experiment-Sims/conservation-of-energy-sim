@@ -150,18 +150,8 @@ class FreeFallSim {
 
         if (this.dropComplete && this.measuredTime !== null) {
             el('labTime').textContent = this.measuredTime.toFixed(4) + ' s';
-            el('labVelocity').textContent = this.measuredV.toFixed(3) + ' m/s';
-            const pe = this.mass * G * hGate;
-            const ke = 0.5 * this.mass * this.measuredV * this.measuredV;
-            el('livePE').textContent = pe.toFixed(3) + ' J';
-            el('liveKE').textContent = ke.toFixed(3) + ' J';
-            el('liveME').textContent = (pe + ke).toFixed(3) + ' J';
         } else {
             el('labTime').textContent = '— s';
-            el('labVelocity').textContent = '— m/s';
-            el('livePE').textContent = '— J';
-            el('liveKE').textContent = '— J';
-            el('liveME').textContent = '— J';
         }
     }
 
@@ -1036,8 +1026,6 @@ class TeacherDemo {
 document.addEventListener('DOMContentLoaded', () => {
     // --- Lab Mode ---
     const labSim = new FreeFallSim('labCanvas');
-    const labBarChart = new EnergyBarChart('energyBarChart');
-    const labLineGraph = new EnergyLineGraph('energyLineGraph');
 
     // Controls
     el('massSlider').addEventListener('input', e => {
@@ -1080,25 +1068,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const cells = row.querySelectorAll('td');
             cells[1].textContent = trial.height.toFixed(3);
             cells[2].textContent = trial.time.toFixed(4);
-            cells[3].textContent = trial.velocity.toFixed(3);
-            cells[4].textContent = trial.pe.toFixed(3);
-            cells[5].textContent = trial.ke.toFixed(3);
-            cells[6].textContent = trial.me.toFixed(3);
         }
-        labBarChart.setData(labSim.trials);
-        labLineGraph.setData(labSim.trials);
         labSim.updateReadouts();
         el('recordBtn').disabled = true;
 
         if (labSim.trials.length >= 6) {
-            el('labHint').textContent = '🎉 All 6 points recorded! Analyze the graphs below.';
+            el('labHint').textContent = '🎉 All 6 points recorded! Now, calculate the velocity and energies for each point.';
         }
     });
 
     el('resetLabBtn').addEventListener('click', () => {
         labSim.resetExperiment();
-        labBarChart.clear();
-        labLineGraph.clear();
         document.querySelectorAll('#dataTable tbody tr').forEach(r => {
             r.classList.remove('recorded');
             const cells = r.querySelectorAll('td');
