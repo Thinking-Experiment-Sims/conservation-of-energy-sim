@@ -226,7 +226,7 @@
                     <!-- Teacher Readout -->
                     <div class="metric-grid readout-grid">
                         <div class="metric-card">
-                            <div class="metric-line"><span class="metric-label">Current Point</span><span id="teacherPoint">—</span></div>
+                            <div class="metric-line"><span class="metric-label">Trials</span><span id="teacherTrials">0 / 6</span></div>
                         </div>
                         <div class="metric-card">
                             <div class="metric-line"><span class="metric-label">Height</span><span id="teacherHeight">— m</span></div>
@@ -277,10 +277,10 @@
 
                     <div class="mass-controls-box" style="margin-top:0.5rem;">
                         <label>
-                            Demo Speed
+                            Lower Photogate Height
                             <div class="range-row">
-                                <input type="range" id="demoSpeedSlider" min="0.5" max="3" step="0.5" value="1">
-                                <output id="demoSpeedDisplay">1.0×</output>
+                                <input type="range" id="teacherBottomGateSlider" min="0.000" max="0.950" step="0.010" value="0.800">
+                                <output id="teacherBottomGateDisplay">0.800 m</output>
                             </div>
                         </label>
                     </div>
@@ -291,11 +291,13 @@
                     </label>
 
                     <div class="button-row">
-                        <button id="runDemoBtn">▶ Run Demo</button>
+                        <button id="teacherDropBtn">🔽 Drop Ball</button>
                     </div>
                     <div class="button-row">
-                        <button class="ghost" id="pauseDemoBtn" disabled>⏸ Pause</button>
-                        <button class="ghost" id="resetDemoBtn">↺ Reset</button>
+                        <button id="teacherRecordBtn" disabled>📝 Record Data Point</button>
+                    </div>
+                    <div class="button-row">
+                        <button class="ghost" id="teacherResetLabBtn">🔄 Reset Experiment</button>
                     </div>
 
                     <!-- Teacher Data Table -->
@@ -307,9 +309,9 @@
                                     <th>Pt</th>
                                     <th>h (m)</th>
                                     <th>v (m/s)</th>
-                                    <th>PE</th>
-                                    <th>KE</th>
-                                    <th>ME</th>
+                                    <th>PE (J)</th>
+                                    <th>KE (J)</th>
+                                    <th>ME (J)</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -325,7 +327,7 @@
 
                     <!-- Annotation box -->
                     <div class="teacher-annotation" id="teacherAnnotation">
-                        <p id="annotationText">Press <strong>Run Demo</strong> to start the automated walkthrough of all 6 measurement points.</p>
+                        <p id="annotationText">Move the lower photogate and drop the ball to build your demonstrative data table.</p>
                     </div>
                 </div>
             </div>

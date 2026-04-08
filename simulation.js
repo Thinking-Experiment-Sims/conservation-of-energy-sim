@@ -10,7 +10,8 @@ const G = 9.8;
 
 // ==================== FREE-FALL LAB SIMULATION ====================
 class FreeFallSim {
-    constructor(canvasId) {
+    constructor(canvasId, idPrefix = 'lab') {
+        this.idPrefix = idPrefix;
         this.canvas = el(canvasId);
         this.ctx = this.canvas.getContext('2d');
         const dpr = window.devicePixelRatio || 1;
@@ -22,6 +23,7 @@ class FreeFallSim {
         this.H = rect.height;
         this.canvas.style.width = rect.width + 'px';
         this.canvas.style.height = rect.height + 'px';
+        this.showEnergy = true;
 
         // Physics
         this.mass = 0.250;
@@ -145,13 +147,25 @@ class FreeFallSim {
 
     updateReadouts() {
         const hGate = this.bottomGateH;
-        el('labHeight').textContent = hGate.toFixed(3) + ' m';
-        el('labTrials').textContent = this.trials.length + ' / 6';
+        if (el(this.idPrefix + 'Height')) el(this.idPrefix + 'Height').textContent = hGate.toFixed(3) + ' m';
+        if (el(this.idPrefix + 'Trials')) el(this.idPrefix + 'Trials').textContent = this.trials.length + ' / 6';
 
         if (this.dropComplete && this.measuredTime !== null) {
-            el('labTime').textContent = this.measuredTime.toFixed(4) + ' s';
+            if (el(this.idPrefix + 'Time')) el(this.idPrefix + 'Time').textContent = this.measuredTime.toFixed(4) + ' s';
+            
+            if (this.showEnergy) {
+                const pe = this.mass * G * hGate;
+                const ke = 0.5 * this.mass * this.measuredV * this.measuredV;
+                const me = pe + ke;
+                if (el(this.idPrefix + 'Velocity')) el(this.idPrefix + 'Velocity').textContent = this.measuredV.toFixed(3) + ' m/s';
+                if (el(this.idPrefix + 'ME')) el(this.idPrefix + 'ME').textContent = me.toFixed(3) + ' J';
+            }
         } else {
-            el('labTime').textContent = '— s';
+            if (el(this.idPrefix + 'Time')) el(this.idPrefix + 'Time').textContent = '— s';
+            if (this.showEnergy) {
+                if (el(this.idPrefix + 'Velocity')) el(this.idPrefix + 'Velocity').textContent = '— m/s';
+                if (el(this.idPrefix + 'ME')) el(this.idPrefix + 'ME').textContent = '— J';
+            }
         }
     }
 
@@ -338,7 +352,7 @@ class FreeFallSim {
         ctx.stroke();
 
         // Velocity arrow (small, to the right of ball)
-        if (this.isDropping && this.ballV > 0.5) {
+        if (this.showEnergy && this.isDropping && this.ballV > 0.5) {
             const arrowLen = Math.min(this.ballV * 10, 60);
             ctx.strokeStyle = '#ff5f7a';
             ctx.lineWidth = 2;
@@ -382,7 +396,9 @@ class FreeFallSim {
         ctx.fillText('Δh=' + fallDist.toFixed(2) + 'm', x + 7, midY - 8);
         ctx.font = '9px Arial';
         ctx.fillText('t=' + this.measuredTime.toFixed(3) + 's', x + 7, midY + 5);
-        ctx.fillText('v=' + this.measuredV.toFixed(2) + 'm/s', x + 7, midY + 18);
+        if (this.showEnergy) {
+            ctx.fillText('v=' + this.measuredV.toFixed(2) + 'm/s', x + 7, midY + 18);
+        }
     }
 
     drawLabels(ctx) {
@@ -411,6 +427,8 @@ class FreeFallSim {
     }
 
     drawEnergyPanel(ctx) {
+        if (!this.showEnergy) return;
+
         // Right-side energy panel — uses the blank space to the right of apparatus
         const px = this.energyPanelX;
         const panelW = this.W - px - 12;
@@ -817,215 +835,13 @@ class EnergyLineGraph {
     }
 }
 
-// ==================== TEACHER DEMO ====================
-class TeacherDemo {
-    constructor(sim, barChart, lineGraph) {
-        this.sim = sim; // FreeFallSim instance (teacher canvas)
-        this.barChart = barChart;
-        this.lineGraph = lineGraph;
-        this.isRunning = false;
-        this.isPaused = false;
-        this.currentStep = 0;
-        this.speed = 1.0;
-        this.airResistance = false;
-        this.mass = 0.250;
-        this.dropHeight = 1.000;
-        this.trials = [];
-        this.timeoutId = null;
-        this.annotations = [
-            { text: 'Point A is the <strong>release point</strong> — all energy is PE, KE = 0. The ball starts from rest at the top photogate.' },
-            { text: 'Point B: The ball has fallen and gained speed. Some PE has <strong>converted to KE</strong>. Notice ME stays constant!' },
-            { text: 'Point C: More PE → KE conversion. The ball is moving faster. The total ME bar hasn\'t changed.' },
-            { text: 'Point D: Past the halfway mark. KE is now <strong>larger</strong> than PE. Energy keeps shifting form.' },
-            { text: 'Point E: Almost at the bottom. Most of the energy is now KE. PE is small because height is low.' },
-            { text: 'Point F: At the <strong>reference point</strong> (h = 0). All PE has converted to KE. ME = KE here.' }
-        ];
-    }
-
-    getPointHeights() {
-        const h0 = this.dropHeight;
-        return [
-            h0,
-            h0 * 0.8,
-            h0 * 0.6,
-            h0 * 0.4,
-            h0 * 0.2,
-            0.000
-        ];
-    }
-
-    async run() {
-        this.isRunning = true;
-        this.isPaused = false;
-        this.currentStep = 0;
-        this.trials = [];
-        this.sim.mass = this.mass;
-        this.sim.topGateH = this.dropHeight;
-        this.sim.trials = [];
-
-        el('teacherDataTable').querySelectorAll('tbody tr').forEach(r => {
-            r.classList.remove('recorded');
-            const cells = r.querySelectorAll('td');
-            for (let i = 1; i < cells.length; i++) cells[i].textContent = '—';
-        });
-
-        this.barChart.clear();
-        this.lineGraph.clear();
-
-        const heights = this.getPointHeights();
-        const labels = ['A', 'B', 'C', 'D', 'E', 'F'];
-
-        for (let i = 0; i < 6; i++) {
-            if (!this.isRunning) break;
-            while (this.isPaused) {
-                await new Promise(r => setTimeout(r, 100));
-                if (!this.isRunning) return;
-            }
-
-            this.currentStep = i;
-            const h = heights[i];
-            this.sim.bottomGateH = h;
-            this.sim.setBottomGate(h);
-            el('bottomGateSlider') && (el('bottomGateSlider').value = h);
-
-            // Update annotation
-            el('annotationText').innerHTML = this.annotations[i].text;
-            el('teacherPoint').textContent = 'Point ' + labels[i];
-
-            // Animate the drop
-            await this.animateDrop(h);
-
-            if (!this.isRunning) break;
-
-            // Calculate
-            const fallDist = this.dropHeight - h;
-            const t = fallDist > 0 ? Math.sqrt(2 * fallDist / G) : 0;
-            let v = G * t;
-
-            // Air resistance reduces velocity
-            if (this.airResistance && fallDist > 0) {
-                v *= (1 - 0.04 * fallDist); // simple drag model
-            }
-
-            const pe = this.mass * G * h;
-            const ke = 0.5 * this.mass * v * v;
-            const me = pe + ke;
-
-            const trial = { label: labels[i], height: h, time: t, velocity: v, pe, ke, me };
-            this.trials.push(trial);
-
-            // Update table
-            const row = el('tTrial' + labels[i]);
-            if (row) {
-                row.classList.add('recorded');
-                const cells = row.querySelectorAll('td');
-                cells[1].textContent = h.toFixed(3);
-                cells[2].textContent = v.toFixed(3);
-                cells[3].textContent = pe.toFixed(3);
-                cells[4].textContent = ke.toFixed(3);
-                cells[5].textContent = me.toFixed(3);
-            }
-
-            // Update readouts
-            el('teacherHeight').textContent = h.toFixed(3) + ' m';
-            el('teacherVelocity').textContent = v.toFixed(3) + ' m/s';
-            el('teacherME').textContent = me.toFixed(3) + ' J';
-
-            // Update charts
-            this.barChart.setData(this.trials);
-            this.lineGraph.setData(this.trials);
-
-            // Pause between drops
-            await new Promise(r => setTimeout(r, 1500 / this.speed));
-        }
-
-        if (this.isRunning) {
-            if (this.airResistance) {
-                el('annotationText').innerHTML = '⚠️ With air resistance, ME <strong>decreases</strong> as the ball falls. Energy is lost to thermal energy (heat) and sound. This is why ME is NOT constant — a non-conservative force is doing work.';
-            } else {
-                el('annotationText').innerHTML = '✅ <strong>ME is constant</strong> across all 6 points! PE converts to KE as the ball falls, but the total never changes. This confirms conservation of mechanical energy.';
-            }
-        }
-        this.isRunning = false;
-        el('runDemoBtn').disabled = false;
-        el('pauseDemoBtn').disabled = true;
-    }
-
-    animateDrop(targetH) {
-        return new Promise(resolve => {
-            const fallDist = this.dropHeight - targetH;
-            if (fallDist <= 0) {
-                this.sim.ballY = 0;
-                this.sim.ballV = 0;
-                this.sim.dropComplete = true;
-                this.sim.measuredTime = 0;
-                this.sim.measuredV = 0;
-                this.sim.draw();
-                resolve();
-                return;
-            }
-
-            this.sim.resetDrop();
-            this.sim.bottomGateH = targetH;
-            this.sim.isDropping = true;
-            this.sim.lastFrameTime = performance.now();
-
-            const step = () => {
-                if (!this.isRunning) { resolve(); return; }
-                const now = performance.now();
-                const dt = Math.min((now - this.sim.lastFrameTime) / 1000, 0.05) * this.speed;
-                this.sim.lastFrameTime = now;
-
-                this.sim.ballV += G * dt;
-                this.sim.ballY += this.sim.ballV * dt;
-
-                if (this.sim.ballY >= fallDist) {
-                    this.sim.ballY = fallDist;
-                    const tFall = Math.sqrt(2 * fallDist / G);
-                    this.sim.measuredTime = tFall;
-                    this.sim.measuredV = G * tFall;
-                    this.sim.isDropping = false;
-                    this.sim.dropComplete = true;
-                    this.sim.draw();
-                    resolve();
-                    return;
-                }
-
-                this.sim.draw();
-                requestAnimationFrame(step);
-            };
-            requestAnimationFrame(step);
-        });
-    }
-
-    pause() { this.isPaused = true; }
-    resume() { this.isPaused = false; }
-    stop() { this.isRunning = false; this.isPaused = false; }
-    reset() {
-        this.stop();
-        this.trials = [];
-        this.sim.resetDrop();
-        this.sim.trials = [];
-        this.sim.draw();
-        this.barChart.clear();
-        this.lineGraph.clear();
-        el('teacherDataTable').querySelectorAll('tbody tr').forEach(r => {
-            r.classList.remove('recorded');
-            const cells = r.querySelectorAll('td');
-            for (let i = 1; i < cells.length; i++) cells[i].textContent = '—';
-        });
-        el('teacherPoint').textContent = '—';
-        el('teacherHeight').textContent = '— m';
-        el('teacherVelocity').textContent = '— m/s';
-        el('teacherME').textContent = '— J';
-        el('annotationText').innerHTML = 'Press <strong>Run Demo</strong> to start the automated walkthrough of all 6 measurement points.';
-    }
-}
+// Old TeacherDemo removed entirely.
 
 // ==================== INITIALIZATION ====================
 document.addEventListener('DOMContentLoaded', () => {
     // --- Lab Mode ---
     const labSim = new FreeFallSim('labCanvas');
+    labSim.showEnergy = false;
 
     // Controls
     el('massSlider').addEventListener('input', e => {
@@ -1093,55 +909,102 @@ document.addEventListener('DOMContentLoaded', () => {
     // The teacher canvases are inside a display:none div on page load.
     // We must wait until the tab is visible before measuring canvas dimensions.
     let teacherInited = false;
-    let teacherSim, teacherBar, teacherLine, demo;
+    let teacherSim, teacherBar, teacherLine;
+    let airResistanceActive = false;
 
     function initTeacher() {
         if (teacherInited) return;
         teacherInited = true;
 
-        teacherSim = new FreeFallSim('teacherCanvas');
+        teacherSim = new FreeFallSim('teacherCanvas', 'teacher');
+        teacherSim.showEnergy = true;
         teacherBar = new EnergyBarChart('teacherBarChart');
         teacherLine = new EnergyLineGraph('teacherLineGraph');
-        demo = new TeacherDemo(teacherSim, teacherBar, teacherLine);
 
         el('teacherMassSlider').addEventListener('input', e => {
-            demo.mass = parseFloat(e.target.value);
-            el('teacherMassDisplay').textContent = demo.mass.toFixed(3) + ' kg';
+            const m = parseFloat(e.target.value);
+            teacherSim.setMass(m);
+            el('teacherMassDisplay').textContent = m.toFixed(3) + ' kg';
         });
+
         el('teacherHeightSlider').addEventListener('input', e => {
-            demo.dropHeight = parseFloat(e.target.value);
-            teacherSim.setTopGate(demo.dropHeight);
-            el('teacherHeightDisplay').textContent = demo.dropHeight.toFixed(3) + ' m';
-        });
-        el('demoSpeedSlider').addEventListener('input', e => {
-            demo.speed = parseFloat(e.target.value);
-            el('demoSpeedDisplay').textContent = demo.speed.toFixed(1) + '×';
-        });
-        el('airResistToggle').addEventListener('change', e => {
-            demo.airResistance = e.target.checked;
-        });
-        el('runDemoBtn').addEventListener('click', () => {
-            demo.reset();
-            teacherSim.mass = demo.mass;
-            teacherSim.topGateH = demo.dropHeight;
-            el('runDemoBtn').disabled = true;
-            el('pauseDemoBtn').disabled = false;
-            demo.run();
-        });
-        el('pauseDemoBtn').addEventListener('click', () => {
-            if (demo.isPaused) {
-                demo.resume();
-                el('pauseDemoBtn').textContent = '⏸ Pause';
-            } else {
-                demo.pause();
-                el('pauseDemoBtn').textContent = '▶ Resume';
+            const h = parseFloat(e.target.value);
+            teacherSim.setTopGate(h);
+            el('teacherHeightDisplay').textContent = h.toFixed(3) + ' m';
+            const bSlider = el('teacherBottomGateSlider');
+            bSlider.max = (h - 0.010).toFixed(3);
+            if (parseFloat(bSlider.value) >= h) {
+                bSlider.value = Math.max(0, h - 0.050).toFixed(3);
+                bSlider.dispatchEvent(new Event('input'));
             }
         });
-        el('resetDemoBtn').addEventListener('click', () => {
-            demo.reset();
-            el('runDemoBtn').disabled = false;
-            el('pauseDemoBtn').disabled = true;
-            el('pauseDemoBtn').textContent = '⏸ Pause';
+
+        el('teacherBottomGateSlider').addEventListener('input', e => {
+            const h = parseFloat(e.target.value);
+            teacherSim.setBottomGate(h);
+            el('teacherBottomGateDisplay').textContent = h.toFixed(3) + ' m';
+            teacherSim.updateReadouts();
+        });
+
+        el('airResistToggle').addEventListener('change', e => {
+            airResistanceActive = e.target.checked;
+        });
+
+        el('teacherDropBtn').addEventListener('click', () => {
+            teacherSim.drop();
+            el('teacherRecordBtn').disabled = false;
+        });
+
+        el('teacherRecordBtn').addEventListener('click', () => {
+            const trial = teacherSim.recordTrial();
+            if (!trial) return;
+
+            // Apply air resistance modifier if checked
+            if (airResistanceActive) {
+                const fallDist = teacherSim.topGateH - trial.height;
+                if (fallDist > 0) {
+                    trial.velocity *= (1 - 0.04 * fallDist);
+                    trial.ke = 0.5 * teacherSim.mass * trial.velocity * trial.velocity;
+                    trial.me = trial.pe + trial.ke;
+                }
+            }
+
+            const row = el('tTrial' + trial.label);
+            if (row) {
+                row.classList.add('recorded');
+                const cells = row.querySelectorAll('td');
+                cells[1].textContent = trial.height.toFixed(3);
+                cells[2].textContent = trial.velocity.toFixed(3);
+                cells[3].textContent = trial.pe.toFixed(3);
+                cells[4].textContent = trial.ke.toFixed(3);
+                cells[5].textContent = trial.me.toFixed(3);
+            }
+            teacherBar.setData(teacherSim.trials);
+            teacherLine.setData(teacherSim.trials);
+            teacherSim.updateReadouts();
+            el('teacherRecordBtn').disabled = true;
+
+            if (teacherSim.trials.length >= 6) {
+                if (airResistanceActive) {
+                    el('annotationText').innerHTML = '⚠️ With air resistance, ME <strong>decreases</strong> as the ball falls. This is why ME is NOT constant — a non-conservative force is doing work.';
+                } else {
+                    el('annotationText').innerHTML = '✅ <strong>ME is constant</strong> across all 6 points! PE converts to KE as the ball falls, confirming conservation of mechanical energy.';
+                }
+            }
+        });
+
+        el('teacherResetLabBtn').addEventListener('click', () => {
+            teacherSim.resetExperiment();
+            teacherBar.clear();
+            teacherLine.clear();
+            document.querySelectorAll('#teacherDataTable tbody tr').forEach(r => {
+                r.classList.remove('recorded');
+                const cells = r.querySelectorAll('td');
+                for (let i = 1; i < cells.length; i++) cells[i].textContent = '—';
+            });
+            teacherSim.updateReadouts();
+            el('teacherRecordBtn').disabled = true;
+            el('annotationText').innerHTML = 'Move the lower photogate and drop the ball to build your demonstrative data table.';
         });
     }
 
