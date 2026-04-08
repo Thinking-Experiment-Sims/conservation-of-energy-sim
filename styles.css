@@ -132,10 +132,35 @@ body[data-theme="light"] .hero {
 .mode-tab {
   flex: 1; font-weight: 700; font-size: 1.05rem;
   text-align: center; border-radius: 10px; padding: 0.62rem 0.82rem;
+  /* Default (inactive) — plain ghost style */
+  background: rgba(200, 162, 74, 0.10);
+  color: var(--text-300);
+  border: 1px solid var(--border);
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.mode-tab:hover:not(.active) {
+  background: rgba(200, 162, 74, 0.18);
+  color: var(--text-100);
 }
 .mode-tab.active {
   background: linear-gradient(135deg, var(--gold-500), var(--gold-400));
-  color: #2b1d06; border: 1px solid var(--gold-500);
+  color: #2b1d06;
+  border-color: var(--gold-500);
+  filter: none;
+}
+body[data-theme="light"] .mode-tab {
+  background: #f0f8fb;
+  color: var(--text-300);
+  border-color: #c8dbe3;
+}
+body[data-theme="light"] .mode-tab:hover:not(.active) {
+  background: #dff0f6;
+  color: var(--text-100);
+}
+body[data-theme="light"] .mode-tab.active {
+  background: linear-gradient(135deg, #0d839f, #0b5f77);
+  color: #ffffff;
+  border-color: #0a5d74;
 }
 .mode-content { display: none; }
 .mode-content.active { display: block; }

@@ -1035,57 +1035,61 @@ document.addEventListener('DOMContentLoaded', () => {
         el('labHint').textContent = 'Move the lower photogate and drop the ball to build your data table.';
     });
 
-    // --- Teacher Mode ---
-    const teacherSim = new FreeFallSim('teacherCanvas');
-    const teacherBar = new EnergyBarChart('teacherBarChart');
-    const teacherLine = new EnergyLineGraph('teacherLineGraph');
-    const demo = new TeacherDemo(teacherSim, teacherBar, teacherLine);
+    // --- Teacher Mode: LAZY INIT ---
+    // The teacher canvases are inside a display:none div on page load.
+    // We must wait until the tab is visible before measuring canvas dimensions.
+    let teacherInited = false;
+    let teacherSim, teacherBar, teacherLine, demo;
 
-    el('teacherMassSlider').addEventListener('input', e => {
-        demo.mass = parseFloat(e.target.value);
-        el('teacherMassDisplay').textContent = demo.mass.toFixed(3) + ' kg';
-    });
+    function initTeacher() {
+        if (teacherInited) return;
+        teacherInited = true;
 
-    el('teacherHeightSlider').addEventListener('input', e => {
-        demo.dropHeight = parseFloat(e.target.value);
-        teacherSim.setTopGate(demo.dropHeight);
-        el('teacherHeightDisplay').textContent = demo.dropHeight.toFixed(3) + ' m';
-    });
+        teacherSim = new FreeFallSim('teacherCanvas');
+        teacherBar = new EnergyBarChart('teacherBarChart');
+        teacherLine = new EnergyLineGraph('teacherLineGraph');
+        demo = new TeacherDemo(teacherSim, teacherBar, teacherLine);
 
-    el('demoSpeedSlider').addEventListener('input', e => {
-        demo.speed = parseFloat(e.target.value);
-        el('demoSpeedDisplay').textContent = demo.speed.toFixed(1) + '×';
-    });
-
-    el('airResistToggle').addEventListener('change', e => {
-        demo.airResistance = e.target.checked;
-    });
-
-    el('runDemoBtn').addEventListener('click', () => {
-        demo.reset();
-        teacherSim.mass = demo.mass;
-        teacherSim.topGateH = demo.dropHeight;
-        el('runDemoBtn').disabled = true;
-        el('pauseDemoBtn').disabled = false;
-        demo.run();
-    });
-
-    el('pauseDemoBtn').addEventListener('click', () => {
-        if (demo.isPaused) {
-            demo.resume();
+        el('teacherMassSlider').addEventListener('input', e => {
+            demo.mass = parseFloat(e.target.value);
+            el('teacherMassDisplay').textContent = demo.mass.toFixed(3) + ' kg';
+        });
+        el('teacherHeightSlider').addEventListener('input', e => {
+            demo.dropHeight = parseFloat(e.target.value);
+            teacherSim.setTopGate(demo.dropHeight);
+            el('teacherHeightDisplay').textContent = demo.dropHeight.toFixed(3) + ' m';
+        });
+        el('demoSpeedSlider').addEventListener('input', e => {
+            demo.speed = parseFloat(e.target.value);
+            el('demoSpeedDisplay').textContent = demo.speed.toFixed(1) + '×';
+        });
+        el('airResistToggle').addEventListener('change', e => {
+            demo.airResistance = e.target.checked;
+        });
+        el('runDemoBtn').addEventListener('click', () => {
+            demo.reset();
+            teacherSim.mass = demo.mass;
+            teacherSim.topGateH = demo.dropHeight;
+            el('runDemoBtn').disabled = true;
+            el('pauseDemoBtn').disabled = false;
+            demo.run();
+        });
+        el('pauseDemoBtn').addEventListener('click', () => {
+            if (demo.isPaused) {
+                demo.resume();
+                el('pauseDemoBtn').textContent = '⏸ Pause';
+            } else {
+                demo.pause();
+                el('pauseDemoBtn').textContent = '▶ Resume';
+            }
+        });
+        el('resetDemoBtn').addEventListener('click', () => {
+            demo.reset();
+            el('runDemoBtn').disabled = false;
+            el('pauseDemoBtn').disabled = true;
             el('pauseDemoBtn').textContent = '⏸ Pause';
-        } else {
-            demo.pause();
-            el('pauseDemoBtn').textContent = '▶ Resume';
-        }
-    });
-
-    el('resetDemoBtn').addEventListener('click', () => {
-        demo.reset();
-        el('runDemoBtn').disabled = false;
-        el('pauseDemoBtn').disabled = true;
-        el('pauseDemoBtn').textContent = '⏸ Pause';
-    });
+        });
+    }
 
     // --- Mode Tab Switching ---
     document.querySelectorAll('.mode-tab').forEach(btn => {
@@ -1097,6 +1101,7 @@ document.addEventListener('DOMContentLoaded', () => {
             el(mode + '-mode').classList.add('active');
 
             if (mode === 'teacher') {
+                initTeacher(); // now the panel is visible — canvas dimensions are correct
                 teacherSim.draw();
                 teacherBar.draw();
                 teacherLine.draw();
