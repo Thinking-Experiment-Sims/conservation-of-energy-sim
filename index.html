@@ -153,7 +153,20 @@
                             </tbody>
                         </table>
                     </div>
-                    </div>
+                </div>
+            </div>
+
+            <!-- Graphs Section -->
+            <div class="app-layout">
+                <div class="panel" style="grid-column: span 6;">
+                    <h3 class="section-title" style="margin-top:0;">Energy at Each Point</h3>
+                    <canvas id="energyBarChart" class="sim-canvas graph-canvas" width="580" height="320"></canvas>
+                    <p class="hint" style="text-align:center;">Grouped bar chart — PE (blue), KE (orange), ME (green) at each recorded point.</p>
+                </div>
+                <div class="panel" style="grid-column: span 6;">
+                    <h3 class="section-title" style="margin-top:0;">Energy vs. Height</h3>
+                    <canvas id="energyLineGraph" class="sim-canvas graph-canvas" width="580" height="320"></canvas>
+                    <p class="hint" style="text-align:center;">As height decreases, PE converts to KE — but ME stays constant.</p>
                 </div>
             </div>
 
@@ -176,7 +189,7 @@
                         </div>
                         <div class="inquiry-card">
                             <h3>🧪 The Transfer Pattern</h3>
-                            <p>On the line graph, find the height where PE = KE. At that height, each form of energy equals <strong>exactly half</strong> of the total. Why?</p>
+                            <p>On the line graph, find the height where PE = KE. At that height, each form of energy equals exactly half of the total. Why?</p>
                         </div>
                     </div>
                 </div>

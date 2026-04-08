@@ -24,6 +24,7 @@ class FreeFallSim {
         this.canvas.style.width = rect.width + 'px';
         this.canvas.style.height = rect.height + 'px';
         this.showEnergy = true;
+        this.showEnergyVals = true;
 
         // Physics
         this.mass = 0.250;
@@ -396,7 +397,7 @@ class FreeFallSim {
         ctx.fillText('Δh=' + fallDist.toFixed(2) + 'm', x + 7, midY - 8);
         ctx.font = '9px Arial';
         ctx.fillText('t=' + this.measuredTime.toFixed(3) + 's', x + 7, midY + 5);
-        if (this.showEnergy) {
+        if (this.showEnergy && this.showEnergyVals) {
             ctx.fillText('v=' + this.measuredV.toFixed(2) + 'm/s', x + 7, midY + 18);
         }
     }
@@ -529,15 +530,15 @@ class FreeFallSim {
             ctx.fillText(text2, labelX, cy + 9);
         };
 
-        if (peH > 14) labelStyle(getC('#4a9eff','#2979ff'), 'PE', pe.toFixed(3)+'J', barTop + peH/2);
-        if (keH > 14) labelStyle(getC('#ff8c42','#e65100'), 'KE', ke.toFixed(3)+'J', barTop + peH + keH/2);
+        if (peH > 14) labelStyle(getC('#4a9eff','#2979ff'), 'PE', this.showEnergyVals ? pe.toFixed(3)+'J' : '', barTop + peH/2);
+        if (keH > 14) labelStyle(getC('#ff8c42','#e65100'), 'KE', this.showEnergyVals ? ke.toFixed(3)+'J' : '', barTop + peH + keH/2);
 
         // ME total label below bar
         const meY = panelTop + panelH - 62;
         ctx.fillStyle = getC('#5cbf79', '#2e7d32');
         ctx.font = 'bold 10px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('ME = ' + me.toFixed(3) + ' J', midX, meY);
+        ctx.fillText(this.showEnergyVals ? ('ME = ' + me.toFixed(3) + ' J') : 'Total ME', midX, meY);
 
         // Separator line
         ctx.strokeStyle = getC('rgba(229,204,143,0.15)', 'rgba(11,95,119,0.15)');
@@ -552,15 +553,16 @@ class FreeFallSim {
         ctx.font = '9px Arial';
         ctx.textAlign = 'center';
         ctx.fillText('h = ' + h.toFixed(3) + ' m', midX, meY + 24);
-        ctx.fillText('v = ' + v.toFixed(3) + ' m/s', midX, meY + 37);
-        ctx.fillText('t = ' + this.measuredTime.toFixed(4) + ' s', midX, meY + 50);
+        if (this.showEnergyVals) ctx.fillText('v = ' + v.toFixed(3) + ' m/s', midX, meY + 37);
+        ctx.fillText('t = ' + this.measuredTime.toFixed(4) + ' s', midX, this.showEnergyVals ? meY + 50 : meY + 37);
     }
 }
 
 
 // ==================== ENERGY BAR CHART ====================
 class EnergyBarChart {
-    constructor(canvasId) {
+    constructor(canvasId, hideValues = false) {
+        this.hideValues = hideValues;
         this.canvas = el(canvasId);
         this.ctx = this.canvas.getContext('2d');
         this.data = [];
@@ -614,13 +616,15 @@ class EnergyBarChart {
         ctx.stroke();
 
         // Y-axis labels
-        ctx.fillStyle = getC('#a9b2c3', '#4b6570');
-        ctx.font = '10px Arial';
-        ctx.textAlign = 'right';
-        ctx.textBaseline = 'middle';
-        for (let i = 0; i <= 5; i++) {
-            const val = maxE - (i / 5) * maxE;
-            ctx.fillText(val.toFixed(2), pad.left - 6, pad.top + (i / 5) * pH);
+        if (!this.hideValues) {
+            ctx.fillStyle = getC('#a9b2c3', '#4b6570');
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            for (let i = 0; i <= 5; i++) {
+                const val = maxE - (i / 5) * maxE;
+                ctx.fillText(val.toFixed(2), pad.left - 6, pad.top + (i / 5) * pH);
+            }
         }
 
         // Y axis title
@@ -655,7 +659,7 @@ class EnergyBarChart {
                 ctx.lineWidth = 1;
                 ctx.strokeRect(x, y, barW, bH);
                 // Value label
-                if (bH > 14) {
+                if (!this.hideValues && bH > 14) {
                     ctx.fillStyle = getC('#eef2f9', '#fff');
                     ctx.font = 'bold 8px Arial';
                     ctx.textAlign = 'center';
@@ -693,7 +697,8 @@ class EnergyBarChart {
 
 // ==================== ENERGY vs HEIGHT LINE GRAPH ====================
 class EnergyLineGraph {
-    constructor(canvasId) {
+    constructor(canvasId, hideValues = false) {
+        this.hideValues = hideValues;
         this.canvas = el(canvasId);
         this.ctx = this.canvas.getContext('2d');
         this.data = [];
@@ -769,16 +774,18 @@ class EnergyLineGraph {
         ctx.restore();
 
         // Tick labels
-        ctx.font = '10px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'top';
-        for (let i = 0; i <= 5; i++) {
-            ctx.fillText(((i / 5) * maxH).toFixed(2), pad.left + (i / 5) * pW, pad.top + pH + 6);
-        }
-        ctx.textAlign = 'right';
-        ctx.textBaseline = 'middle';
-        for (let i = 0; i <= 5; i++) {
-            ctx.fillText((maxE - (i / 5) * maxE).toFixed(2), pad.left - 6, pad.top + (i / 5) * pH);
+        if (!this.hideValues) {
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            for (let i = 0; i <= 5; i++) {
+                ctx.fillText(((i / 5) * maxH).toFixed(2), pad.left + (i / 5) * pW, pad.top + pH + 6);
+            }
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            for (let i = 0; i <= 5; i++) {
+                ctx.fillText((maxE - (i / 5) * maxE).toFixed(2), pad.left - 6, pad.top + (i / 5) * pH);
+            }
         }
 
         // Draw lines
@@ -841,7 +848,10 @@ class EnergyLineGraph {
 document.addEventListener('DOMContentLoaded', () => {
     // --- Lab Mode ---
     const labSim = new FreeFallSim('labCanvas');
-    labSim.showEnergy = false;
+    labSim.showEnergy = true;
+    labSim.showEnergyVals = false;
+    const labBarChart = new EnergyBarChart('energyBarChart', true);
+    const labLineGraph = new EnergyLineGraph('energyLineGraph', true);
 
     // Controls
     el('massSlider').addEventListener('input', e => {
@@ -885,6 +895,8 @@ document.addEventListener('DOMContentLoaded', () => {
             cells[1].textContent = trial.height.toFixed(3);
             cells[2].textContent = trial.time.toFixed(4);
         }
+        labBarChart.setData(labSim.trials);
+        labLineGraph.setData(labSim.trials);
         labSim.updateReadouts();
         el('recordBtn').disabled = true;
 
@@ -895,6 +907,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     el('resetLabBtn').addEventListener('click', () => {
         labSim.resetExperiment();
+        labBarChart.clear();
+        labLineGraph.clear();
         document.querySelectorAll('#dataTable tbody tr').forEach(r => {
             r.classList.remove('recorded');
             const cells = r.querySelectorAll('td');
