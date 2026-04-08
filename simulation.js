@@ -39,12 +39,12 @@ class FreeFallSim {
         this.animId = null;
         this.lastFrameTime = null;
 
-        // Layout constants
-        this.margin = { left: 100, right: 60, top: 50, bottom: 50 };
-        this.towerX = 200;
-        this.towerTop = this.margin.top + 30;
-        this.towerBot = this.H - this.margin.bottom;
-        this.pxPerMeter = (this.towerBot - this.towerTop) / 1.1; // 1.1m range displayed
+        // Layout constants — apparatus shifted LEFT to use right half for energy panel
+        this.towerX = 140;          // pole x position
+        this.towerTop = 70;         // top of pole (px)
+        this.towerBot = this.H - 40;
+        this.pxPerMeter = (this.towerBot - this.towerTop) / 1.12;
+        this.energyPanelX = this.W * 0.52; // right-half energy panel starts here
 
         // Data
         this.trials = [];
@@ -175,16 +175,16 @@ class FreeFallSim {
         this.drawBall(ctx);
         this.drawHeightAnnotation(ctx);
         this.drawLabels(ctx);
-        this.drawEnergyPreview(ctx);
+        this.drawEnergyPanel(ctx);
     }
 
     drawStand(ctx) {
         const x = this.towerX;
         // Base
         ctx.fillStyle = getC('#a9b2c3', '#4b6570');
-        ctx.fillRect(x - 60, this.towerBot, 120, 12);
+        ctx.fillRect(x - 45, this.towerBot, 90, 10);
         ctx.fillStyle = getC('#c9d1df', '#8b9da6');
-        ctx.fillRect(x - 65, this.towerBot + 10, 130, 8);
+        ctx.fillRect(x - 50, this.towerBot + 9, 100, 6);
 
         // Vertical pole
         const grad = ctx.createLinearGradient(x - 5, this.towerTop, x + 5, this.towerTop);
@@ -192,41 +192,41 @@ class FreeFallSim {
         grad.addColorStop(0.5, '#d8b767');
         grad.addColorStop(1, '#8b7030');
         ctx.fillStyle = grad;
-        ctx.fillRect(x - 5, this.towerTop - 20, 10, this.towerBot - this.towerTop + 20);
+        ctx.fillRect(x - 5, this.towerTop - 18, 10, this.towerBot - this.towerTop + 18);
 
         // Top bracket
         ctx.fillStyle = getC('#eef2f9', '#123140');
-        ctx.fillRect(x - 12, this.towerTop - 25, 24, 15);
+        ctx.fillRect(x - 10, this.towerTop - 22, 20, 12);
 
-        // Release arm
+        // Release arm (horizontal, shorter)
         ctx.fillStyle = '#8b7030';
-        ctx.fillRect(x, this.heightToPx(this.topGateH) - 4, 80, 8);
+        ctx.fillRect(x, this.heightToPx(this.topGateH) - 3, 65, 6);
 
         // Electromagnet at end of arm
         ctx.fillStyle = getC('#ff5f7a', '#c62828');
         ctx.beginPath();
-        ctx.arc(x + 80, this.heightToPx(this.topGateH), 8, 0, Math.PI * 2);
+        ctx.arc(x + 65, this.heightToPx(this.topGateH), 7, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = getC('#eef2f9', '#fff');
-        ctx.font = 'bold 8px Arial';
+        ctx.font = 'bold 7px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('EM', x + 80, this.heightToPx(this.topGateH));
+        ctx.fillText('EM', x + 65, this.heightToPx(this.topGateH));
     }
 
     drawRuler(ctx) {
-        const rX = this.towerX - 80;
+        const rX = this.towerX - 58;
         const rTop = this.heightToPx(1.05);
-        const rBot = this.towerBot + 5;
-        const rW = 28;
+        const rBot = this.towerBot + 4;
+        const rW = 22;
 
         ctx.fillStyle = getC('rgba(229,204,143,0.05)', 'rgba(11,95,119,0.05)');
         ctx.fillRect(rX, rTop, rW, rBot - rTop);
-        ctx.strokeStyle = getC('rgba(229,204,143,0.3)', 'rgba(11,95,119,0.3)');
+        ctx.strokeStyle = getC('rgba(229,204,143,0.25)', 'rgba(11,95,119,0.25)');
         ctx.lineWidth = 1;
         ctx.strokeRect(rX, rTop, rW, rBot - rTop);
 
-        ctx.font = '10px Arial';
+        ctx.font = '9px Arial';
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
 
@@ -234,7 +234,7 @@ class FreeFallSim {
             const h = cm / 100;
             const y = this.heightToPx(h);
             if (y < rTop || y > rBot) continue;
-            const tickLen = cm % 10 === 0 ? 12 : 6;
+            const tickLen = cm % 10 === 0 ? 10 : 5;
             ctx.strokeStyle = getC('#a9b2c3', '#795548');
             ctx.lineWidth = 1;
             ctx.beginPath();
@@ -244,11 +244,11 @@ class FreeFallSim {
 
             if (cm % 20 === 0) {
                 ctx.fillStyle = getC('#a9b2c3', '#5d4037');
-                ctx.fillText((cm / 100).toFixed(1), rX - 4, y);
+                ctx.fillText((cm / 100).toFixed(1), rX - 2, y);
             }
         }
 
-        // h=0 label
+        // h=0 reference line
         const zeroY = this.heightToPx(0);
         ctx.strokeStyle = '#ff5f7a';
         ctx.lineWidth = 1.5;
@@ -257,16 +257,16 @@ class FreeFallSim {
         ctx.lineTo(rX + rW, zeroY);
         ctx.stroke();
         ctx.fillStyle = '#ff5f7a';
-        ctx.font = 'bold 10px Arial';
+        ctx.font = 'bold 9px Arial';
         ctx.textAlign = 'right';
-        ctx.fillText('h=0', rX - 4, zeroY);
+        ctx.fillText('h=0', rX - 2, zeroY);
 
         // vertical label
         ctx.save();
-        ctx.translate(rX - 20, (rTop + rBot) / 2);
+        ctx.translate(rX - 16, (rTop + rBot) / 2);
         ctx.rotate(-Math.PI / 2);
         ctx.fillStyle = getC('#a9b2c3', '#4b6570');
-        ctx.font = '10px Arial';
+        ctx.font = '9px Arial';
         ctx.textAlign = 'center';
         ctx.fillText('Height (m)', 0, 0);
         ctx.restore();
@@ -279,51 +279,46 @@ class FreeFallSim {
 
     _drawGate(ctx, h, label, color) {
         const y = this.heightToPx(h);
-        const gateLeft = this.towerX + 50;
-        const gateRight = this.towerX + 110;
-
-        // Support arms
-        ctx.fillStyle = getC('#666', '#999');
-        ctx.fillRect(gateLeft, y - 3, 8, 6);
-        ctx.fillRect(gateRight, y - 3, 8, 6);
+        const gateLeft = this.towerX + 42;
+        const gateRight = this.towerX + 88;
 
         // Gate posts
-        ctx.fillStyle = getC('#333', '#ccc');
-        ctx.fillRect(gateLeft, y - 18, 8, 36);
-        ctx.fillRect(gateRight, y - 18, 8, 36);
+        ctx.fillStyle = getC('#555', '#bbb');
+        ctx.fillRect(gateLeft, y - 14, 7, 28);
+        ctx.fillRect(gateRight, y - 14, 7, 28);
 
         // Laser beam
         ctx.save();
         ctx.strokeStyle = color;
-        ctx.lineWidth = 2;
-        ctx.globalAlpha = 0.7;
-        ctx.setLineDash([4,3]);
+        ctx.lineWidth = 1.5;
+        ctx.globalAlpha = 0.75;
+        ctx.setLineDash([4, 3]);
         ctx.beginPath();
-        ctx.moveTo(gateLeft + 8, y);
+        ctx.moveTo(gateLeft + 7, y);
         ctx.lineTo(gateRight, y);
         ctx.stroke();
         ctx.setLineDash([]);
         ctx.globalAlpha = 1.0;
 
-        // Laser dots
+        // Dots
         ctx.fillStyle = color;
-        ctx.beginPath(); ctx.arc(gateLeft + 8, y, 3, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(gateRight, y, 3, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(gateLeft + 7, y, 2.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(gateRight, y, 2.5, 0, Math.PI * 2); ctx.fill();
         ctx.restore();
 
-        // Label
+        // Labels — to the right of gate, compact
         ctx.fillStyle = color;
-        ctx.font = 'bold 11px Arial';
+        ctx.font = 'bold 10px Arial';
         ctx.textAlign = 'left';
-        ctx.fillText(label, gateRight + 14, y + 4);
-        ctx.font = '10px Arial';
+        ctx.fillText(label, gateRight + 10, y + 3);
+        ctx.font = '9px Arial';
         ctx.fillStyle = getC('#a9b2c3', '#4b6570');
-        ctx.fillText('h = ' + h.toFixed(3) + ' m', gateRight + 14, y + 18);
+        ctx.fillText('h = ' + h.toFixed(3) + ' m', gateRight + 10, y + 15);
     }
 
     drawBall(ctx) {
-        const ballRadius = 14;
-        const x = this.towerX + 80;
+        const ballRadius = 11;
+        const x = this.towerX + 65; // ball rides on arm end
         let y;
 
         if (!this.isDropping && !this.dropComplete) {
@@ -334,13 +329,13 @@ class FreeFallSim {
         }
 
         // Shadow
-        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.fillStyle = 'rgba(0,0,0,0.18)';
         ctx.beginPath();
         ctx.arc(x + 2, y + 2, ballRadius, 0, Math.PI * 2);
         ctx.fill();
 
         // Ball gradient
-        const bg = ctx.createRadialGradient(x - 4, y - 4, 2, x, y, ballRadius);
+        const bg = ctx.createRadialGradient(x - 3, y - 3, 2, x, y, ballRadius);
         bg.addColorStop(0, '#ffd54f');
         bg.addColorStop(0.5, '#ff8f00');
         bg.addColorStop(1, '#e65100');
@@ -352,26 +347,22 @@ class FreeFallSim {
         ctx.lineWidth = 1.5;
         ctx.stroke();
 
-        // Velocity arrow
+        // Velocity arrow (small, to the right of ball)
         if (this.isDropping && this.ballV > 0.5) {
-            const arrowLen = Math.min(this.ballV * 12, 80);
+            const arrowLen = Math.min(this.ballV * 10, 60);
             ctx.strokeStyle = '#ff5f7a';
-            ctx.lineWidth = 3;
+            ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.moveTo(x + 25, y);
-            ctx.lineTo(x + 25, y + arrowLen);
+            ctx.moveTo(x + 18, y);
+            ctx.lineTo(x + 18, y + arrowLen);
             ctx.stroke();
-            // Arrowhead
             ctx.fillStyle = '#ff5f7a';
             ctx.beginPath();
-            ctx.moveTo(x + 25, y + arrowLen + 6);
-            ctx.lineTo(x + 20, y + arrowLen - 4);
-            ctx.lineTo(x + 30, y + arrowLen - 4);
+            ctx.moveTo(x + 18, y + arrowLen + 5);
+            ctx.lineTo(x + 14, y + arrowLen - 3);
+            ctx.lineTo(x + 22, y + arrowLen - 3);
             ctx.closePath();
             ctx.fill();
-            ctx.font = 'bold 11px Arial';
-            ctx.textAlign = 'left';
-            ctx.fillText('v', x + 34, y + arrowLen / 2 + 4);
         }
     }
 
@@ -379,99 +370,182 @@ class FreeFallSim {
         if (!this.dropComplete) return;
         const topY = this.heightToPx(this.topGateH);
         const botY = this.heightToPx(this.bottomGateH);
-        const x = this.towerX + 140;
+        // Small bracket between the two gates, just to the right of the gate posts
+        const x = this.towerX + 100;
         const fallDist = this.topGateH - this.bottomGateH;
 
-        // Bracket
         ctx.strokeStyle = getC('#c8a24a', '#0b5f77');
-        ctx.lineWidth = 2;
-        ctx.setLineDash([4, 3]);
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([3, 2]);
         ctx.beginPath();
         ctx.moveTo(x, topY);
         ctx.lineTo(x, botY);
         ctx.stroke();
         ctx.setLineDash([]);
-        // Ticks
-        ctx.beginPath(); ctx.moveTo(x - 5, topY); ctx.lineTo(x + 5, topY); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(x - 5, botY); ctx.lineTo(x + 5, botY); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x - 4, topY); ctx.lineTo(x + 4, topY); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x - 4, botY); ctx.lineTo(x + 4, botY); ctx.stroke();
 
         ctx.fillStyle = getC('#c8a24a', '#0b5f77');
-        ctx.font = 'bold 11px Arial';
+        ctx.font = 'bold 10px Arial';
         ctx.textAlign = 'left';
-        ctx.fillText('Δh = ' + fallDist.toFixed(3) + ' m', x + 10, (topY + botY) / 2);
-        ctx.font = '10px Arial';
-        ctx.fillText('t = ' + this.measuredTime.toFixed(4) + ' s', x + 10, (topY + botY) / 2 + 16);
-        ctx.fillText('v = ' + this.measuredV.toFixed(3) + ' m/s', x + 10, (topY + botY) / 2 + 30);
+        const midY = (topY + botY) / 2;
+        ctx.fillText('Δh=' + fallDist.toFixed(2) + 'm', x + 7, midY - 8);
+        ctx.font = '9px Arial';
+        ctx.fillText('t=' + this.measuredTime.toFixed(3) + 's', x + 7, midY + 5);
+        ctx.fillText('v=' + this.measuredV.toFixed(2) + 'm/s', x + 7, midY + 18);
     }
 
     drawLabels(ctx) {
+        // Title + params — compact, top-left
         ctx.fillStyle = getC('#eef2f9', '#123140');
-        ctx.font = 'bold 14px Arial';
+        ctx.font = 'bold 12px Arial';
         ctx.textAlign = 'left';
-        ctx.fillText('Free-Fall Energy Lab', 15, 25);
+        ctx.fillText('Free-Fall Energy Lab', 8, 20);
         ctx.fillStyle = getC('#a9b2c3', '#4b6570');
-        ctx.font = '12px Arial';
-        ctx.fillText('Mass: ' + this.mass.toFixed(3) + ' kg', 15, 44);
-        ctx.fillText('g = 9.8 m/s²', 15, 60);
+        ctx.font = '10px Arial';
+        ctx.fillText('m=' + this.mass.toFixed(3) + ' kg  g=9.8 m/s²', 8, 34);
 
         // Reference line at h=0
         const zeroY = this.heightToPx(0);
         ctx.save();
         ctx.strokeStyle = '#ff5f7a';
         ctx.lineWidth = 1;
-        ctx.globalAlpha = 0.4;
-        ctx.setLineDash([6, 4]);
+        ctx.globalAlpha = 0.35;
+        ctx.setLineDash([5, 4]);
         ctx.beginPath();
-        ctx.moveTo(this.towerX - 85, zeroY);
-        ctx.lineTo(this.towerX + 160, zeroY);
+        ctx.moveTo(this.towerX - 62, zeroY);
+        ctx.lineTo(this.towerX + 110, zeroY);
         ctx.stroke();
         ctx.setLineDash([]);
         ctx.restore();
     }
 
-    drawEnergyPreview(ctx) {
-        if (!this.dropComplete) return;
+    drawEnergyPanel(ctx) {
+        // Right-side energy panel — uses the blank space to the right of apparatus
+        const px = this.energyPanelX;
+        const panelW = this.W - px - 12;
+        const panelTop = this.towerTop - 10;
+        const panelH = this.towerBot - panelTop + 10;
+
+        // Panel background
+        ctx.fillStyle = getC('rgba(17,20,27,0.7)', 'rgba(240,248,255,0.85)');
+        ctx.strokeStyle = getC('rgba(229,204,143,0.2)', 'rgba(11,95,119,0.2)');
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(px, panelTop, panelW, panelH, 10);
+        ctx.fill();
+        ctx.stroke();
+
+        const midX = px + panelW / 2;
+
+        if (!this.dropComplete) {
+            // Idle state — show setup hints
+            ctx.fillStyle = getC('#a9b2c3', '#4b6570');
+            ctx.font = 'bold 11px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Energy Breakdown', midX, panelTop + 22);
+            ctx.font = '10px Arial';
+            ctx.fillText('Drop the ball to see', midX, panelTop + 44);
+            ctx.fillText('live energy values', midX, panelTop + 58);
+
+            // Decorative dotted circle
+            ctx.strokeStyle = getC('rgba(200,162,74,0.25)', 'rgba(11,95,119,0.2)');
+            ctx.lineWidth = 2;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.arc(midX, panelTop + panelH / 2, 28, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = getC('rgba(200,162,74,0.4)', 'rgba(11,95,119,0.3)');
+            ctx.font = '22px Arial';
+            ctx.fillText('⚡', midX, panelTop + panelH / 2 + 8);
+            return;
+        }
+
         const h = this.bottomGateH;
         const v = this.measuredV;
         const pe = this.mass * G * h;
         const ke = 0.5 * this.mass * v * v;
         const me = pe + ke;
-        const maxE = this.mass * G * this.topGateH * 1.1;
+        const maxE = Math.max(me * 1.08, 0.01);
 
-        const barX = 15;
-        const barW = 55;
-        const barMaxH = 120;
-        const barBot = this.H - 60;
-
-        ctx.fillStyle = getC('rgba(255,255,255,0.06)', 'rgba(0,0,0,0.04)');
-        ctx.fillRect(barX - 5, barBot - barMaxH - 30, barW * 3 + 30, barMaxH + 50);
-        ctx.strokeStyle = getC('rgba(229,204,143,0.2)', 'rgba(11,95,119,0.2)');
-        ctx.strokeRect(barX - 5, barBot - barMaxH - 30, barW * 3 + 30, barMaxH + 50);
-
-        ctx.fillStyle = getC('#a9b2c3', '#4b6570');
-        ctx.font = 'bold 10px Arial';
+        // Title
+        ctx.fillStyle = getC('#e5cc8f', '#d67b19');
+        ctx.font = 'bold 11px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('Energy Preview', barX + barW * 1.5 + 10, barBot - barMaxH - 16);
+        ctx.fillText('Energy Breakdown', midX, panelTop + 20);
 
-        const drawBar = (x, val, color, label) => {
-            const bH = (val / maxE) * barMaxH;
+        // Vertical stacked bar showing PE+KE
+        const barTop = panelTop + 32;
+        const barBot2 = panelTop + panelH - 80;
+        const barH = barBot2 - barTop;
+        const barW = Math.min(panelW * 0.38, 36);
+        const barLeft = midX - barW / 2;
+
+        // ME outline (total height)
+        ctx.fillStyle = getC('rgba(92,191,121,0.12)', 'rgba(46,125,50,0.1)');
+        ctx.strokeStyle = getC('#5cbf79', '#2e7d32');
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(barLeft, barTop, barW, barH, 4);
+        ctx.fill();
+        ctx.stroke();
+
+        // PE segment (top)
+        const peH = (pe / maxE) * barH;
+        const keH = (ke / maxE) * barH;
+        ctx.fillStyle = getC('#4a9eff', '#2979ff');
+        ctx.globalAlpha = 0.85;
+        ctx.beginPath();
+        ctx.roundRect(barLeft, barTop, barW, peH, [4, 4, 0, 0]);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // KE segment (bottom)
+        ctx.fillStyle = getC('#ff8c42', '#e65100');
+        ctx.globalAlpha = 0.85;
+        ctx.beginPath();
+        ctx.roundRect(barLeft, barTop + peH, barW, keH, [0, 0, 4, 4]);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // Value labels to the right of the bar
+        const labelX = barLeft + barW + 8;
+        const labelStyle = (color, text1, text2, cy) => {
             ctx.fillStyle = color;
-            ctx.globalAlpha = 0.8;
-            ctx.fillRect(x, barBot - bH, barW - 5, bH);
-            ctx.globalAlpha = 1;
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 1;
-            ctx.strokeRect(x, barBot - bH, barW - 5, bH);
-            ctx.fillStyle = getC('#eef2f9', '#123140');
             ctx.font = 'bold 9px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText(label, x + (barW - 5) / 2, barBot + 12);
-            ctx.fillText(val.toFixed(3) + 'J', x + (barW - 5) / 2, barBot - bH - 6);
+            ctx.textAlign = 'left';
+            ctx.fillText(text1, labelX, cy - 3);
+            ctx.font = '9px Arial';
+            ctx.fillStyle = getC('#eef2f9', '#123140');
+            ctx.fillText(text2, labelX, cy + 9);
         };
 
-        drawBar(barX, pe, getC('#4a9eff', '#2979ff'), 'PE');
-        drawBar(barX + barW, ke, getC('#ff8c42', '#e65100'), 'KE');
-        drawBar(barX + barW * 2, me, getC('#5cbf79', '#2e7d32'), 'ME');
+        if (peH > 14) labelStyle(getC('#4a9eff','#2979ff'), 'PE', pe.toFixed(3)+'J', barTop + peH/2);
+        if (keH > 14) labelStyle(getC('#ff8c42','#e65100'), 'KE', ke.toFixed(3)+'J', barTop + peH + keH/2);
+
+        // ME total label below bar
+        const meY = panelTop + panelH - 62;
+        ctx.fillStyle = getC('#5cbf79', '#2e7d32');
+        ctx.font = 'bold 10px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('ME = ' + me.toFixed(3) + ' J', midX, meY);
+
+        // Separator line
+        ctx.strokeStyle = getC('rgba(229,204,143,0.15)', 'rgba(11,95,119,0.15)');
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(px + 8, meY + 10);
+        ctx.lineTo(px + panelW - 8, meY + 10);
+        ctx.stroke();
+
+        // Height readout
+        ctx.fillStyle = getC('#a9b2c3', '#4b6570');
+        ctx.font = '9px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('h = ' + h.toFixed(3) + ' m', midX, meY + 24);
+        ctx.fillText('v = ' + v.toFixed(3) + ' m/s', midX, meY + 37);
+        ctx.fillText('t = ' + this.measuredTime.toFixed(4) + ' s', midX, meY + 50);
     }
 }
 
