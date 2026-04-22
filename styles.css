@@ -28,7 +28,7 @@
   --me-color: #5cbf79;
 }
 
-body[data-theme="light"] {
+:root {
   --bg-950: #e9f4fb;
   --bg-900: #fff4dd;
   --bg-800: #ffffff;
@@ -76,7 +76,7 @@ canvas { will-change: transform; transform: translateZ(0); }
   mask-image: radial-gradient(circle at center, black 42%, transparent 95%);
 }
 
-body[data-theme="light"] .bg-grid {
+.bg-grid {
   background-image: linear-gradient(rgba(15, 126, 155, 0.06) 1px, transparent 1px),
     linear-gradient(90deg, rgba(214, 123, 25, 0.06) 1px, transparent 1px);
 }
@@ -102,7 +102,7 @@ h1, h2, h3, h4 { margin: 0; font-family: "Inter", "IBM Plex Sans", "Segoe UI", s
   content: ""; position: absolute; inset: 0 auto 0 0;
   width: 12px; background: var(--gold-500); border-radius: 14px 0 0 14px;
 }
-body[data-theme="light"] .hero {
+.hero {
   background: linear-gradient(160deg, #ffffff, #f7fbfd);
   border-color: #c8dbe3;
 }
@@ -120,11 +120,6 @@ body[data-theme="light"] .hero {
   display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;
 }
 .hero-top > :first-child { flex: 1 1 auto; min-width: 0; padding-left: 0.4rem; }
-.display-toggle {
-  min-width: 156px; position: absolute; top: 1rem; right: 1rem;
-  padding-inline: 1rem; z-index: 2;
-}
-
 /* ===== Mode Tabs ===== */
 .mode-tabs {
   display: flex; gap: 0.55rem; margin-top: 0.9rem;
@@ -148,16 +143,16 @@ body[data-theme="light"] .hero {
   border-color: var(--gold-500);
   filter: none;
 }
-body[data-theme="light"] .mode-tab {
+.mode-tab {
   background: #f0f8fb;
   color: var(--text-300);
   border-color: #c8dbe3;
 }
-body[data-theme="light"] .mode-tab:hover:not(.active) {
+.mode-tab:hover:not(.active) {
   background: #dff0f6;
   color: var(--text-100);
 }
-body[data-theme="light"] .mode-tab.active {
+.mode-tab.active {
   background: linear-gradient(135deg, #0d839f, #0b5f77);
   color: #ffffff;
   border-color: #0a5d74;
@@ -178,7 +173,7 @@ body[data-theme="light"] .mode-tab.active {
   background: var(--surface); padding: 1rem;
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
 }
-body[data-theme="light"] .panel {
+.panel {
   box-shadow: 0 6px 16px rgba(12, 54, 68, 0.08);
 }
 .full { grid-column: span 12; }
@@ -212,11 +207,11 @@ button.ghost {
   color: var(--text-100);
 }
 button:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
-body[data-theme="light"] button {
+button {
   background: linear-gradient(160deg, #0d839f, #0b5f77);
   color: #ffffff; border-color: #0a5d74;
 }
-body[data-theme="light"] button.ghost {
+button.ghost {
   background: #f6fbfd; color: var(--text-100); border-color: #9dbac5;
 }
 .button-row {
@@ -231,9 +226,9 @@ input, select, output {
   background: var(--surface-alt); color: var(--text-100);
   padding: 0.54rem 0.62rem;
 }
-body[data-theme="light"] input,
-body[data-theme="light"] select,
-body[data-theme="light"] output {
+input,
+select,
+output {
   background: #f9fdff; color: var(--text-100); border-color: #a9c4cf;
 }
 label {
@@ -264,7 +259,7 @@ label {
   background: radial-gradient(circle at 12% 12%, rgba(223, 190, 115, 0.14), transparent 34%),
     linear-gradient(180deg, #0d1118 0%, #090b0f 100%);
 }
-body[data-theme="light"] .sim-canvas {
+.sim-canvas {
   background: linear-gradient(180deg, #f8fcff, #f2f8fb);
   border-color: #b8d1db;
 }
@@ -294,7 +289,7 @@ body[data-theme="light"] .sim-canvas {
   background: var(--surface-alt); border-radius: 10px;
   padding: 0.62rem 0.7rem;
 }
-body[data-theme="light"] .metric-card {
+.metric-card {
   background: linear-gradient(170deg, #f7fcff, #f1f9fd);
   border-color: #b8d1db;
 }
@@ -389,14 +384,14 @@ body[data-theme="light"] .metric-card {
   color: var(--gold-300); border-bottom-color: var(--gold-500);
   background: transparent;
 }
-body[data-theme="light"] .tab-btn {
+.tab-btn {
   background: transparent;
   color: var(--text-500);
 }
-body[data-theme="light"] .tab-btn:hover {
+.tab-btn:hover {
   color: var(--text-100);
 }
-body[data-theme="light"] .tab-btn.active {
+.tab-btn.active {
   color: var(--gold-400); border-bottom-color: var(--gold-400);
 }
 .tab-content { display: none; }
@@ -442,9 +437,6 @@ output:focus-visible {
 @media (max-width: 1180px) {
   .inquiry-grid, .wide, .narrow { grid-column: span 12; }
   .hero { padding-right: 1.4rem; }
-  .display-toggle {
-    position: static; min-width: 0; width: auto; max-width: 220px;
-  }
   .hero-top { flex-direction: column; }
   .readout-grid { grid-template-columns: repeat(4, 1fr); }
 }
@@ -458,7 +450,6 @@ output:focus-visible {
   .theory-columns { grid-template-columns: 1fr; }
   .hero { padding: 1rem 1rem 1.1rem; }
   .hero h1 { font-size: clamp(1.7rem, 10vw, 2.8rem); }
-  .display-toggle { max-width: none; }
   .range-row { grid-template-columns: 1fr 4rem; }
   .app-layout > [style*="span 6"] { grid-column: span 12; }
 }

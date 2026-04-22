@@ -3,7 +3,7 @@
 // ================================================================
 
 function getC(dark, light) {
-    return document.body.dataset.theme === 'light' ? light : dark;
+    return light;
 }
 const el = id => document.getElementById(id);
 const G = 9.8;
